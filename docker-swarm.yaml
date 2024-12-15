@@ -1,0 +1,74 @@
+version: '3.7'
+
+services:
+  client-react-nginx:
+    image: front-end:latest
+    build:
+      context: ./frontEnd/
+      dockerfile: Dockerfile
+      args:
+        - EC2_PUBLIC_IP=localhost
+    init: true
+    networks:
+      - frontend
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+  api-auth:
+    image: auth-service:latest
+    build:
+      context: ./authService
+      dockerfile: Dockerfile
+    init: true
+    depends_on:
+      - db
+    environment:
+      - DB_URL=mongodb://root:password@db:27017/
+    networks:
+      - frontend
+      - backend
+    ports:
+      - 3001:3001
+    restart: unless-stopped
+  
+  api-post:
+    image: post-service:latest
+    build:
+      context: ./postService/
+      dockerfile: Dockerfile
+    init: true
+    depends_on:
+      - db
+      - api-auth
+    environment:
+      - DB_URL=mongodb://root:password@db:27017/
+      - AUTH_SERVER=api-auth
+    networks:
+      - frontend
+      - backend
+    ports:
+      - 3002:3002
+    restart: unless-stopped
+
+  db:
+    image: postgres:12-alpine
+    networks:
+      - backend
+    volumes:
+      - "postgres:/data/postgres"
+    restart: always
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=example
+      - PGDATA=/data/postgresrd
+  
+    
+volumes:
+  dbdata:
+    driver: local
+
+networks:
+  frontend:
+  backend:
