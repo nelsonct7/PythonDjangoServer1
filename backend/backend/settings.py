@@ -135,5 +135,6 @@ CORS_ORIGIN_WHITELIST = [
      'http://localhost:3000',
      'http://localhost:5173',
      'http://localhost:8080',
-     'http://api-todo:8000/'
 ]
+
+ALLOWED_HOSTS = ['localhost', 'api-todo']
