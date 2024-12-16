@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   client-react-nginx:
-    image: python-client-1:latest
+    image: nelsonct7/python-client-1:latest
     build:
       context: ./frontEnd/
       dockerfile: Dockerfile
@@ -14,10 +14,7 @@ services:
     restart: unless-stopped
   
   api-todo:
-    image: python-server-1:latest
-    build:
-      context: ./backend/
-      dockerfile: Dockerfile
+    image: nelsonct7/python-server-1:latest
     command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000
     init: true
     depends_on:
