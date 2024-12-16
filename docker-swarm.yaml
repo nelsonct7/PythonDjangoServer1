@@ -2,72 +2,57 @@ version: '3.7'
 
 services:
   client-react-nginx:
-    image: front-end:latest
+    image: python-client-1:latest
     build:
       context: ./frontEnd/
       dockerfile: Dockerfile
-      args:
-        - EC2_PUBLIC_IP=localhost
     init: true
     networks:
       - frontend
     ports:
       - 8080:8080
     restart: unless-stopped
-  api-auth:
-    image: auth-service:latest
-    build:
-      context: ./authService
-      dockerfile: Dockerfile
-    init: true
-    depends_on:
-      - db
-    environment:
-      - DB_URL=mongodb://root:password@db:27017/
-    networks:
-      - frontend
-      - backend
-    ports:
-      - 3001:3001
-    restart: unless-stopped
   
-  api-post:
-    image: post-service:latest
+  api-todo:
+    image: python-server-1:latest
     build:
-      context: ./postService/
+      context: ./backend/
       dockerfile: Dockerfile
+    command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000
     init: true
     depends_on:
-      - db
-      - api-auth
+      - pg-db
     environment:
-      - DB_URL=mongodb://root:password@db:27017/
-      - AUTH_SERVER=api-auth
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_HOST=pg-db
+      - POSTGRES_PORT=5432
     networks:
       - frontend
       - backend
     ports:
-      - 3002:3002
+      - 8000:8000
     restart: unless-stopped
 
-  db:
-    image: postgres:12-alpine
+  pg-db:
+    image: postgres
     networks:
       - backend
     volumes:
       - "postgres:/data/postgres"
-    restart: always
-    ports:
-      - 5433:5432
     environment:
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=example
-      - PGDATA=/data/postgresrd
+      - POSTGRES_HOST=pg-db
+      - POSTGRES_PORT=5432
+    ports:
+      - 5433:5432
   
     
 volumes:
-  dbdata:
-    driver: local
+  postgres:
 
 networks:
   frontend:
